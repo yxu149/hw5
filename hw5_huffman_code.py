@@ -1,6 +1,4 @@
-import sys
 import math
-import random
 
 """
 Credits & Acknowledgement
@@ -25,6 +23,7 @@ STRING = "Information theory studies the transmission, processing, extraction, a
          "PCM and PPM which exchange bandwidth for signal-to-noise ratio has intensified the interest in a general " \
          "theory of communication. A basis for such a theory is contained in the important papers of Nyquist and " \
          "Hartley on this subject. "
+node_probs = dict()
 
 
 class Node:
@@ -34,6 +33,7 @@ class Node:
         self.left_child = left_child
         self.right_child = right_child
         self.code = ''
+        self.prob = 0
 
 
 codes = dict()
@@ -73,17 +73,21 @@ def get_codeword(source, code):
 def encode(source):
     symbol_freq = get_frequency(source)
     symbols = symbol_freq.keys()
-    frequencies = symbol_freq.values()
-    print("Symbols and Frequencies", symbol_freq)
 
     nodes = []
+    avg_exp_len = 0.0
+    entropy = 0.0
 
     for symbol in symbols:
         nodes.append(Node(symbol_freq.get(symbol), symbol))
 
+    for node in nodes:
+        node.prob = node.freq / len(STRING)
+        node_probs.update({node.symbol: node.prob})
+
     while len(nodes) > 1:
         # since probability is directly proportional to frequency
-        nodes = sorted(nodes, key=lambda x: x.freq)
+        nodes = sorted(nodes, key=lambda x: x.prob)
 
         right_node = nodes[0]
         left_node = nodes[1]
@@ -98,12 +102,22 @@ def encode(source):
         nodes.append(new_node)
 
     huffman_code = do_code(nodes[0])
-    print("Huffman:", huffman_code)
+
+    # Format the Output
+    print("Symbol - Code")
+    for char in huffman_code:
+        print(char, "-", huffman_code.get(char))
+
+    for char in huffman_code:
+        avg_exp_len += len(huffman_code[char]) * node_probs.get(char)
+        entropy -= node_probs.get(char) * math.log2(node_probs.get(char))
+
+    print("Average Expected Length =", avg_exp_len)
+    print("Entropy =", entropy)
     output = get_codeword(STRING, huffman_code)
 
     return output, nodes[0]
 
 
 out, tree = encode(STRING)
-print("output =", out)
-
+print("\nWhole paragraph encoded:", out)
