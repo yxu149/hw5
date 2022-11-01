@@ -2,6 +2,12 @@ import sys
 import math
 import random
 
+"""
+Credits & Acknowledgement
+https://towardsdatascience.com/huffman-encoding-python-implementation-8448c3654328c
+https://www.section.io/engineering-education/huffman-coding-python/
+"""
+
 # Global variables
 STRING = "Information theory studies the transmission, processing, extraction, and utilization of information. " \
          "Abstractly, information can be thought of as the resolution of uncertainty. In the case of communication of " \
@@ -19,80 +25,85 @@ STRING = "Information theory studies the transmission, processing, extraction, a
          "PCM and PPM which exchange bandwidth for signal-to-noise ratio has intensified the interest in a general " \
          "theory of communication. A basis for such a theory is contained in the important papers of Nyquist and " \
          "Hartley on this subject. "
-codeword = dict()
-probability = dict()
-symbols = dict()
-
-
-# helpers
-def get_distribution(string):
-    for element in string:
-        if symbols.get(element) == None:
-            symbols[element] = 1
-        else:
-            symbols[element] += 1
-    return symbols
-
-
-def get_probability():
-    for element in symbols:
-        probability[element] = symbols.get(element) / len(STRING)
-    return probability
-
-
-def get_codeword(node, parent_code=''):
-    this_code = parent_code + str(node.code)
-    if (node.l_child):
-        get_codeword(node.r_child, this_code)
-    if (node.r_child):
-        get_codeword(node.r_child, this_code)
-    if (not node.l_child and not node.r_child):
-        codeword[node.symbol] = this_code
-    return codeword
 
 
 class Node:
-    def __init__(self, freq, symbol, l_child=None, r_child=None):
+    def __init__(self, freq, symbol, left_child=None, right_child=None):
         self.freq = freq
         self.symbol = symbol
-        self.l_child = l_child
-        self.r_child = r_child
+        self.left_child = left_child
+        self.right_child = right_child
         self.code = ''
 
 
-# Program Entrance
-def huffman_code():
-    entropy = 0.0
-    avg_code_len = 0.0
+codes = dict()
 
-    get_distribution(STRING)
-    get_probability()
-    print(probability)
+
+def do_code(node, code=''):
+    new_code = code + str(node.code)
+
+    if node.left_child:
+        do_code(node.left_child, new_code)
+    if node.right_child:
+        do_code(node.right_child, new_code)
+    if not node.left_child and not node.right_child:
+        codes[node.symbol] = new_code
+
+    return codes
+
+
+def get_frequency(source):
+    char_freq = dict()
+    for char in source:
+        if char_freq.get(char) is None:
+            char_freq[char] = 1
+        else:
+            char_freq[char] += 1
+    return char_freq
+
+
+def get_codeword(source, code):
+    output = []
+    for char in source:
+        output.append(code[char])
+    out_string = ''.join([str(item) for item in output])
+    return out_string
+
+
+def encode(source):
+    symbol_freq = get_frequency(source)
+    symbols = symbol_freq.keys()
+    frequencies = symbol_freq.values()
+    print("Symbols and Frequencies", symbol_freq)
 
     nodes = []
+
     for symbol in symbols:
-        nodes.append(Node(symbols.get(symbol), symbol, None, None))
+        nodes.append(Node(symbol_freq.get(symbol), symbol))
 
     while len(nodes) > 1:
+        # since probability is directly proportional to frequency
         nodes = sorted(nodes, key=lambda x: x.freq)
 
-        right = nodes[0]
-        left = nodes[1]
+        right_node = nodes[0]
+        left_node = nodes[1]
 
-        left.code = 0
-        right.code = 1
+        left_node.code = 0
+        right_node.code = 1
 
-        new_node = Node(left.freq + right.freq, left.symbol + right.symbol, left, right)
+        new_node = Node(left_node.freq + right_node.freq, left_node.symbol + right_node.symbol, left_node, right_node)
 
-        nodes.remove(left)
-        nodes.remove(right)
+        nodes.remove(left_node)
+        nodes.remove(right_node)
         nodes.append(new_node)
 
-    tree = get_codeword(nodes[0])
-    print(tree)
+    huffman_code = do_code(nodes[0])
+    print("Huffman:", huffman_code)
+    output = get_codeword(STRING, huffman_code)
+
+    return output, nodes[0]
 
 
-huffman_code()
-print(symbols)
-print("Average Code Length =", avg_code_len)
-print("Entropy =", entropy)
+out, tree = encode(STRING)
+print("output =", out)
+
