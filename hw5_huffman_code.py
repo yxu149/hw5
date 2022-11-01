@@ -1,4 +1,5 @@
-import math
+# hw5_huffman_code.py
+# Huffman Coding for HW5
 
 """
 Credits & Acknowledgement
@@ -6,7 +7,13 @@ https://towardsdatascience.com/huffman-encoding-python-implementation-8448c36543
 https://www.section.io/engineering-education/huffman-coding-python/
 """
 
+import math
+
+file = open("string.txt", "r")
+STRING = file.read()
+
 # Global variables
+"""
 STRING = "Information theory studies the transmission, processing, extraction, and utilization of information. " \
          "Abstractly, information can be thought of as the resolution of uncertainty. In the case of communication of " \
          "information over a noisy channel, this abstract concept was formalized by Claude Shannon in a paper " \
@@ -23,11 +30,22 @@ STRING = "Information theory studies the transmission, processing, extraction, a
          "PCM and PPM which exchange bandwidth for signal-to-noise ratio has intensified the interest in a general " \
          "theory of communication. A basis for such a theory is contained in the important papers of Nyquist and " \
          "Hartley on this subject. "
+"""
+
 node_probs = dict()
 
 
 class Node:
     def __init__(self, freq, symbol, left_child=None, right_child=None):
+        """
+        A simple node with frequency, symbol, and two children nodes.
+        This is the leaf in Huffman Tree.
+
+        :param freq: frequency of the node's symbol
+        :param symbol: symbol this node is bearing
+        :param left_child: left leaf in Huffman Tree
+        :param right_child: right leaf in Huffman Tree
+        """
         self.freq = freq
         self.symbol = symbol
         self.left_child = left_child
@@ -40,6 +58,14 @@ codes = dict()
 
 
 def do_code(node, code=''):
+    """
+    Recursively creates a tree given the root node and previous code
+    from parent.
+
+    :param node: root/parent node to grow leaves on
+    :param code: codeword from root/parent node
+    :return: a dictionary with finished tree with leaf nodes inside
+    """
     new_code = code + str(node.code)
 
     if node.left_child:
@@ -53,6 +79,12 @@ def do_code(node, code=''):
 
 
 def get_frequency(source):
+    """
+    Gets frequency of each symbol within source string.
+
+    :param source: text string to be analyzed
+    :return: a dictionary pair, (symbol, frequency)
+    """
     char_freq = dict()
     for char in source:
         if char_freq.get(char) is None:
@@ -63,6 +95,13 @@ def get_frequency(source):
 
 
 def get_codeword(source, code):
+    """
+    Formats the codewords into a printable string of output.
+
+    :param source: source text string to be encoded and formatted
+    :param code: dictionary with the finished Huffman Tree inside
+    :return: encoded and formatted output string
+    """
     output = []
     for char in source:
         output.append(code[char])
@@ -71,6 +110,13 @@ def get_codeword(source, code):
 
 
 def encode(source):
+    """
+    Main encoder function.
+
+    :param source: source text string to be coded
+    :return: a pair in form of (text encoded and formatted in binary,
+        Huffman Tree in a dictionary)
+    """
     symbol_freq = get_frequency(source)
     symbols = symbol_freq.keys()
 
@@ -87,7 +133,7 @@ def encode(source):
 
     while len(nodes) > 1:
         # since probability is directly proportional to frequency
-        nodes = sorted(nodes, key=lambda x: x.prob)
+        nodes = sorted(nodes, key=lambda x: x.freq)
 
         right_node = nodes[0]
         left_node = nodes[1]
@@ -119,5 +165,8 @@ def encode(source):
     return output, nodes[0]
 
 
+# Program entry point
 out, tree = encode(STRING)
 print("\nWhole paragraph encoded:", out)
+
+file.close()
